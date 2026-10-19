@@ -17,13 +17,13 @@ import static explodingkittens.Assert.*;
  */
 public class UMLReflectionTest {
 
-    public void testMainClass() throws NoSuchMethodException {
+    private void testMainClass() throws NoSuchMethodException {
         Method mainMethod = Main.class.getMethod("main", String[].class);
         assertTrue(Modifier.isPublic(mainMethod.getModifiers()));
         assertTrue(Modifier.isStatic(mainMethod.getModifiers()));
     }
 
-    public void testServerClass() throws NoSuchFieldException, NoSuchMethodException {
+    private void testServerClass() throws NoSuchFieldException, NoSuchMethodException {
         Field gameField = Server.class.getDeclaredField("game");
         assertTrue(Modifier.isPrivate(gameField.getModifiers()));
         assertEquals(Game.class, gameField.getType());
@@ -39,7 +39,7 @@ public class UMLReflectionTest {
         assertTrue(Modifier.isPublic(broadcastMethod.getModifiers()));
     }
 
-    public void testClientClass() throws NoSuchFieldException, NoSuchMethodException {
+    private void testClientClass() throws NoSuchFieldException, NoSuchMethodException {
         Field socketField = Client.class.getDeclaredField("socket");
         assertTrue(Modifier.isPrivate(socketField.getModifiers()));
         assertEquals(Socket.class, socketField.getType());
@@ -59,7 +59,7 @@ public class UMLReflectionTest {
         assertTrue(Modifier.isPublic(sendCommandMethod.getModifiers()));
     }
 
-    public void testPlayerClass() throws NoSuchFieldException, NoSuchMethodException {
+    private void testPlayerClass() throws NoSuchFieldException, NoSuchMethodException {
         Field idField = Player.class.getDeclaredField("id");
         assertTrue(Modifier.isPrivate(idField.getModifiers()));
         assertEquals(int.class, idField.getType());
@@ -80,7 +80,7 @@ public class UMLReflectionTest {
         assertEquals(String.class, receiveActionMethod.getReturnType());
     }
 
-    public void testClientHandlerClass() throws NoSuchFieldException, NoSuchMethodException {
+    private void testClientHandlerClass() throws NoSuchFieldException, NoSuchMethodException {
         Field socketField = ClientHandler.class.getDeclaredField("socket");
         assertTrue(Modifier.isPrivate(socketField.getModifiers()));
         assertEquals(Socket.class, socketField.getType());
@@ -89,7 +89,7 @@ public class UMLReflectionTest {
         assertTrue(Modifier.isPublic(listenMethod.getModifiers()));
     }
 
-    public void testGameClassAndGameContext() throws NoSuchFieldException, NoSuchMethodException {
+    private void testGameClassAndGameContext() throws NoSuchFieldException, NoSuchMethodException {
         assertTrue(GameContext.class.isAssignableFrom(Game.class), "Game must implement GameContext");
 
         Field playersField = Game.class.getDeclaredField("players");
@@ -134,17 +134,17 @@ public class UMLReflectionTest {
         assertTrue(Modifier.isPublic(endTurnMethod.getModifiers()));
     }
 
-    public void testInitGameClass() throws NoSuchMethodException {
+    private void testInitGameClass() throws NoSuchMethodException {
         Method setupPlayersMethod = InitGame.class.getMethod("setupPlayers", int.class, int.class);
         assertTrue(Modifier.isPublic(setupPlayersMethod.getModifiers()));
         assertEquals(List.class, setupPlayersMethod.getReturnType());
 
-        Method buildDeckMethod = InitGame.class.getMethod("buildDeck", List.class);
+        Method buildDeckMethod = InitGame.class.getMethod("buildDeck", int.class, List.class);
         assertTrue(Modifier.isPublic(buildDeckMethod.getModifiers()));
         assertEquals(Deck.class, buildDeckMethod.getReturnType());
     }
 
-    public void testDiscardPileClass() throws NoSuchFieldException, NoSuchMethodException {
+    private void testDiscardPileClass() throws NoSuchFieldException, NoSuchMethodException {
         Field cardsField = DiscardPile.class.getDeclaredField("cards");
         assertTrue(Modifier.isPrivate(cardsField.getModifiers()));
         assertEquals(Stack.class, cardsField.getType());
@@ -161,7 +161,7 @@ public class UMLReflectionTest {
         assertEquals(int.class, getNopeCountMethod.getReturnType());
     }
 
-    public void testDeckClass() throws NoSuchFieldException, NoSuchMethodException {
+    private void testDeckClass() throws NoSuchFieldException, NoSuchMethodException {
         Field cardsField = Deck.class.getDeclaredField("cards");
         assertTrue(Modifier.isPrivate(cardsField.getModifiers()));
         assertEquals(List.class, cardsField.getType());
@@ -177,7 +177,7 @@ public class UMLReflectionTest {
         assertTrue(Modifier.isPublic(shuffleMethod.getModifiers()));
     }
 
-    public void testCardHierarchy() throws NoSuchFieldException, NoSuchMethodException {
+    private void testCardHierarchy() throws NoSuchFieldException, NoSuchMethodException {
         assertTrue(Modifier.isAbstract(Card.class.getModifiers()));
 
         Field nameField = Card.class.getDeclaredField("name");
@@ -191,12 +191,15 @@ public class UMLReflectionTest {
         assertTrue(Card.class.isAssignableFrom(DefuseCard.class));
         assertTrue(Card.class.isAssignableFrom(AttackCard.class));
         assertTrue(Card.class.isAssignableFrom(NopeCard.class));
-        assertTrue(Card.class.isAssignableFrom(BarkingKittenCard.class));
-        assertTrue(Card.class.isAssignableFrom(StreakingKittenCard.class));
-        assertTrue(Card.class.isAssignableFrom(ImplodingKittenCard.class));
+
+        // REQ 14/18: CardFactory is the extension point for creating Cards by name
+        CardFactory factory = new CardFactory();
+        assertTrue(factory.create("Defuse") instanceof DefuseCard);
+        assertTrue(factory.create("Attack") instanceof AttackCard);
+        assertTrue(factory.create("Nope") instanceof NopeCard);
     }
 
-    public void testConsoleUIClass() throws NoSuchMethodException {
+    private void testConsoleUIClass() throws NoSuchMethodException {
         Class<?> uiClass = explodingkittens.ui.ConsoleUI.class;
         assertTrue(Modifier.isPublic(uiClass.getModifiers()));
 

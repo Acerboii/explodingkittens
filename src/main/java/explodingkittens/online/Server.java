@@ -89,6 +89,7 @@ public class Server {
 
     /**
      * Starts the turn-based game loop in a background thread.
+     * Issue 16: Properly enforces turnsToTake so attacked players take consecutive turns.
      */
     public void startGameLoop() {
         if (game == null) return;
@@ -101,6 +102,12 @@ public class Server {
                     if (active == null || active.isExploded()) {
                         game.endTurn();
                         continue;
+                    }
+
+                    // Issue 16: Display turnsToTake info if player is taking multiple turns
+                    int turnsRemaining = game.getTurnsToTake();
+                    if (turnsRemaining > 1) {
+                        broadcast("\n*** Player " + active.getId() + " is taking " + turnsRemaining + " consecutive turns (Attack)! ***");
                     }
 
                     // Broadcast round status
@@ -134,7 +141,7 @@ public class Server {
                     for (int i = 0; i < activeHand.size(); i++) {
                         prompt.append("  [").append(i + 1).append("] Play ").append(activeHand.get(i).getName()).append("\n");
                     }
-                    prompt.append("Choose an action (P or card number): ");
+                    prompt.append("Choose an action (P, card number, or 'cardNumber targetId' to pick the target): ");
                     active.sendMessage(prompt.toString());
 
                     // Receive action from the active player
@@ -163,17 +170,47 @@ public class Server {
         gameThread.start();
     }
 
+    /**
+     * Parses an action command from an online client.
+     *
+     * REQ 11b: the acting player must be able to choose the target of a card.
+     * Command formats:
+     *   "&lt;cardNumber&gt;"              - play card (legacy auto-target fallback)
+     *   "&lt;cardNumber&gt; &lt;targetId&gt;"   - play card on the chosen target (REQ 11b)
+     *   "&lt;cardName&gt;"                - play card by name
+     *   anything else               - pass
+     */
     private Action parseActionCommand(Player active, String input) {
+        String[] parts = input.trim().split("\\s+");
         try {
-            int cardIndex = Integer.parseInt(input) - 1;
+            int cardIndex = Integer.parseInt(parts[0]) - 1;
             List<Card> hand = active.getHand();
             if (cardIndex >= 0 && cardIndex < hand.size()) {
                 Card card = hand.get(cardIndex);
                 Player target = null;
-                for (Player p : game.getPlayers()) {
-                    if (p.getId() != active.getId() && !p.isExploded()) {
-                        target = p;
-                        break;
+                boolean explicitTargetRequested = false;
+                // Explicit target selection (REQ 11b): "<cardNumber> <targetId>"
+                if (parts.length > 1) {
+                    explicitTargetRequested = true;
+                    try {
+                        int targetId = Integer.parseInt(parts[1]);
+                        for (Player p : game.getPlayers()) {
+                            if (p.getId() == targetId && p.getId() != active.getId() && !p.isExploded()) {
+                                target = p;
+                                break;
+                            }
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+                // Legacy fallback only when no explicit target was requested:
+                // first non-exploded other player. An explicit but unresolvable
+                // target is NOT silently retargeted to someone else.
+                if (target == null && !explicitTargetRequested) {
+                    for (Player p : game.getPlayers()) {
+                        if (p.getId() != active.getId() && !p.isExploded()) {
+                            target = p;
+                            break;
+                        }
                     }
                 }
                 return Action.play(card, target);

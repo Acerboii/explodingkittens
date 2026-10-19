@@ -201,4 +201,49 @@ public class ConsoleUI {
     public void displayDivider() {
         out.println("---------------------------------------------------------------");
     }
+
+    /**
+     * Issue 15: Prompt the player to name a card and choose a target player.
+     * Used for REQ 11g (3 cards played).
+     */
+    public Card promptNamedCard(Player actor, List<Player> availableTargets) {
+        if (actor == null || availableTargets == null || availableTargets.isEmpty()) return null;
+
+        out.println("\n*** Name a card to receive from another player! ***");
+        out.println("Available targets:");
+        for (int i = 0; i < availableTargets.size(); i++) {
+            Player p = availableTargets.get(i);
+            out.println("  [" + (i + 1) + "] Player " + p.getId() + " (Hand: " + p.getHand().size() + " cards)");
+        }
+        out.print("Enter target player number: ");
+        if (scanner.hasNextLine()) {
+            try {
+                int targetIdx = Integer.parseInt(scanner.nextLine().trim()) - 1;
+                if (targetIdx >= 0 && targetIdx < availableTargets.size()) {
+                    Player target = availableTargets.get(targetIdx);
+                    out.print("Name the card you want to receive: ");
+                    if (scanner.hasNextLine()) {
+                        String cardName = scanner.nextLine().trim();
+                        // Try to find the named card in target's hand
+                        Card namedCard = target.getCardByName(cardName);
+                        if (namedCard != null) {
+                            target.removeCard(namedCard);
+                            return namedCard;
+                        } else {
+                            // Try partial match
+                            for (Card c : target.getHand()) {
+                                if (c.getName().toLowerCase().contains(cardName.toLowerCase())) {
+                                    target.removeCard(c);
+                                    return c;
+                                }
+                            }
+                            out.println("Card '" + cardName + "' not found in Player " + target.getId() + "'s hand.");
+                            return null;
+                        }
+                    }
+                }
+            } catch (NumberFormatException ignored) {}
+        }
+        return null;
+    }
 }

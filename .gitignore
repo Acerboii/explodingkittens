@@ -3,3 +3,10 @@ bin/
 target/
 *.class
 .idea/workspace.xml
+Microsoft/
+.mindfs/
+.goosehints
+all_files.txt
+NewHomeExam.iml
+test_output.txt
+.idea/

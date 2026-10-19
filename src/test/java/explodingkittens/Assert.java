@@ -9,6 +9,8 @@ public final class Assert {
 
     private Assert() {}
 
+    // ── boolean ──────────────────────────────────────────────────────────────
+
     public static void assertTrue(boolean condition) {
         assertTrue(condition, "Expected true but was false");
     }
@@ -29,6 +31,8 @@ public final class Assert {
         }
     }
 
+    // ── Object equality ──────────────────────────────────────────────────────
+
     public static void assertEquals(Object expected, Object actual) {
         assertEquals(expected, actual, "Expected: " + expected + ", but got: " + actual);
     }
@@ -39,9 +43,37 @@ public final class Assert {
         }
     }
 
+    // ── primitive / numeric overloads (avoid auto-boxing type traps) ─────────
+
+    public static void assertEquals(long expected, long actual) {
+        assertEquals(expected, actual, "Expected: " + expected + ", but got: " + actual);
+    }
+
+    public static void assertEquals(long expected, long actual, String message) {
+        if (expected != actual) {
+            throw new AssertionError(message + " (Expected: " + expected + ", Got: " + actual + ")");
+        }
+    }
+
+    public static void assertEquals(int expected, int actual) {
+        assertEquals(expected, actual, "Expected: " + expected + ", but got: " + actual);
+    }
+
+    public static void assertEquals(int expected, int actual, String message) {
+        if (expected != actual) {
+            throw new AssertionError(message + " (Expected: " + expected + ", Got: " + actual + ")");
+        }
+    }
+
+    // ── null checks ──────────────────────────────────────────────────────────
+
     public static void assertNull(Object actual) {
+        assertNull(actual, "Expected null, but got: " + actual);
+    }
+
+    public static void assertNull(Object actual, String message) {
         if (actual != null) {
-            throw new AssertionError("Expected null, but got: " + actual);
+            throw new AssertionError(message);
         }
     }
 
@@ -54,6 +86,8 @@ public final class Assert {
             throw new AssertionError(message);
         }
     }
+
+    // ── exception ────────────────────────────────────────────────────────────
 
     public static void assertThrows(Class<? extends Throwable> expectedType, Runnable executable, String message) {
         try {

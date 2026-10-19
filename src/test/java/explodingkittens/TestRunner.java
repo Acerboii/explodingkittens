@@ -20,7 +20,11 @@ public class TestRunner {
         Class<?>[] testClasses = new Class<?>[]{
                 UMLReflectionTest.class,
                 GameMechanicsTest.class,
-                NetworkGameFlowTest.class
+                CardEffectTest.class,
+                NetworkGameFlowTest.class,
+                NopeInterruptWindowTest.class,
+                GameMenuTest.class,
+                BotActionTest.class
         };
 
         for (Class<?> testClass : testClasses) {
@@ -35,9 +39,10 @@ public class TestRunner {
             }
 
             for (Method method : testClass.getDeclaredMethods()) {
-                if (method.getName().startsWith("test") && Modifier.isPublic(method.getModifiers())) {
+                if (method.getName().startsWith("test") && Modifier.isPrivate(method.getModifiers())) {
                     totalTests++;
                     try {
+                        method.setAccessible(true);
                         method.invoke(instance);
                         System.out.println("  [PASS] " + method.getName());
                         passedTests++;
